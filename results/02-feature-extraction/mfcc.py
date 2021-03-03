@@ -1,10 +1,12 @@
+import math
+
 import librosa
 import numpy as np
 from scipy.fftpack import dct
 
 # If you want to see the spectrogram picture
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 def plot_spectrogram(spec, note,file_name):
     """Draw the spectrogram picture
@@ -123,7 +125,7 @@ def mel_filter(num_filter, fs, n):
     mel_fh = 2595 * np.log10(1 + fh / 700)
     x = np.linspace(0, mel_fh, num_filter + 2)  # mel 刻度
     for i in range(num_filter + 2):  # 索引值
-        x[i] = int(700 * (10 ** (x[i] / 2595) - 1) / fs * n)
+        x[i] = math.floor(700 * (10 ** (x[i] / 2595) - 1) / fs * n)
     num_points = n // 2 + 1
     y = np.zeros((num_filter, num_points))
     for k in range(1, num_filter + 1):
@@ -141,6 +143,53 @@ def mel_filter(num_filter, fs, n):
     # plt.show()
     return y
 
+def plot_wav(wav, fs, i, j, k, label, color):
+    t = len(wav) / fs * 1000
+    x = np.arange(0, t, 1/fs * 1000)
+    plt.subplot(i, j, k)
+    plt.plot(x, wav, color)
+    plt.xlabel(label)
+
+def plot_spectrum(data, i, j, k, label, color):
+    x = np.arange(0, len(data), 1)
+    plt.subplot(i, j, k)
+    plt.plot(x, data, color)
+    plt.xlabel(label)
+
+def fft(x):
+    return np.abs(np.fft.fft(x, n=fft_len))
+
+def test_every_step():
+    wav, fs = librosa.load('./test.wav', sr=None)
+    frame = wav[:400]
+    frame_preemphasis = preemphasis(frame)
+    win = np.hamming(len(frame))
+    frame_window = frame_preemphasis * win
+    frame_spectrum = fft(frame)[:257]
+    frame_preemphasis_spectrum = fft(frame_preemphasis)[:257]
+    frame_window_spectrum = fft(frame_window)[:257]
+    fbank_feats = fbank(frame_window_spectrum)
+    mfcc_feats = dct(fbank_feats)
+
+    # 原始信号
+    plot_wav(frame, fs, 5, 2, 1, "original", "blue")
+    # 原始信号频谱
+    plot_spectrum(frame_spectrum, 5, 2, 2, "original", "grey")
+    # 预加重处理后的信号
+    plot_wav(frame_preemphasis, fs, 5, 2, 3, "preemphasis", "blue")
+    # 预加重处理后的信号频谱
+    plot_spectrum(frame_preemphasis_spectrum, 5, 2, 4, "preemphasis", "grey")
+    # 加窗信号
+    plot_wav(frame_window, fs, 5, 2, 5, "window", "blue")
+    # 加窗信号频谱
+    plot_spectrum(frame_window_spectrum, 5, 2, 6, "window", "grey")
+    # fbank
+    plot_spectrum(fbank_feats, 5, 2, 8, "fbank", "grey")
+    # mfcc
+    plot_spectrum(mfcc_feats, 5, 2, 10, "mfcc", "grey")
+
+    plt.show()
+
 def main():
     wav, fs = librosa.load('./test.wav', sr=None)
     signal = preemphasis(wav)
@@ -148,7 +197,7 @@ def main():
     spectrum = get_spectrum(frames)
     fbank_feats = fbank(spectrum)
     mfcc_feats = mfcc(fbank_feats)
-    plot_spectrogram(fbank_feats, 'Filter Bank','fbank.png')
+    plot_spectrogram(fbank_feats.T, 'Filter Bank','fbank.png')
     write_file(fbank_feats,'./test.fbank')
     plot_spectrogram(mfcc_feats.T, 'MFCC','mfcc.png')
     write_file(mfcc_feats,'./test.mfcc')
@@ -157,5 +206,5 @@ def test():
     mel_filter(23, 16000, 512)
 
 if __name__ == '__main__':
-    main()
-    # test()
+    # main()
+    test_every_step()
