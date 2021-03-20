@@ -18,8 +18,8 @@
   they express the same set of models?  Can you think of any
   advantage one representation might have over the other?
 
-->
-
+-> 感觉两种表示方法都可以（甚至我还倾向于选择把分布放在 state 上）。放在 arc 上
+   到底有什么好处呢？
 
 * When doing isolated word recognition, one method is to compute the
   likelihood of the acoustic feature vectors with each word HMM separately,
@@ -29,8 +29,8 @@
   Are these methods equivalent (in terms of the answer selected)?
   Why or why not?
 
-->
-
+-> 理论上有可能不相等，但是实际中 Viterbi 那条路径占了绝大部分的概率，所以实际
+   中得到的结果应该是一样的。
 
 * To do the dynamic programming computation correctly, one must
   iterate through the cells in the dynamic programming chart
@@ -53,8 +53,10 @@
   If there are skip arcs, under what conditions is the good ordering
   still valid?
 
-->
-
+-> 第一种方案总能产生正确的结果。在高状态能跳到低状态的情况下，第二种方案会有
+   问题。比如假如状态4能来自状态5，按第二种方案，当计算状态4时并不知道上一帧
+   状态5的值，所以无法得出结果。
+   skip arcs 是什么？为什么需要 skip arcs？不太明白。
 
 * Create the file "p1b.out" by running:
 
@@ -91,13 +93,14 @@
   Explain how to compute the posterior count of each component Gaussian
   given the posterior count of the entire GMM.
 
-->
+-> arcPosterior = alpha_t-1_i * a_i_j * gauss_component_probability * beta_t_j
+   gauss_component_probability 为每个高斯分量的后验概率。
 
 
 * Given the total posterior counts of each Gaussian in a GMM, explain
   how to reestimate the mixture weights of each Gaussian in that GMM.
 
-->
+-> 分别用每个高斯分量的后验除以所有高斯分量的后验和就可以得到这个高斯分量的权重。
 
 
 ########################################################################
